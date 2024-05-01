@@ -1,30 +1,36 @@
-import { Action, ActionPanel, Icon, List, showToast, Toast } from "@raycast/api";
-import { useFetch } from "@raycast/utils";
-
-interface Todo {
-  body: string;
-  completed_at: string | null;
-  url: string;
-}
-
-interface TodoResponse {
-  todos: Todo[];
-}
+import { List, Detail, Toast, showToast, Icon, ActionPanel, Action } from "@raycast/api";
+import { useState, useEffect } from "react";
+import { Todo } from "./types";
+import * as wip from "./oauth/wip";
 
 export default function Command() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [todos, setTodos] = useState<Todo[]>([]);
 
-  const { data, error, isLoading } = useFetch<TodoResponse>("https://wip.co/api/v1/users/marc/todos.json");
+  useEffect(() => {
+    (async () => {
+      try {
+        await wip.authorize();
+        const fetchedTodos = await wip.fetchTodos();
+        setTodos(fetchedTodos);
+        setIsLoading(false);
+      } catch (error) {
+        console.error(error);
+        setIsLoading(false);
+        showToast({ style: Toast.Style.Failure, title: String(error) });
+      }
+    })();
+  }, []);
 
-  if (error) {
-    showToast(Toast.Style.Failure, "Failed to load todos");
-    console.error(error);
+  if (isLoading) {
+    return <Detail isLoading={isLoading} />;
   }
 
   return (
     <List isLoading={isLoading}>
-      {data?.todos.map((todo, index) => (
+      {todos.map((todo) => (
         <List.Item
-          key={index}
+          key={todo.id}
           title={todo.body}
           icon={{ source: todo.completed_at ? Icon.CheckCircle : Icon.Circle, tintColor: todo.completed_at ? "green" : "gray" }}
           actions={
@@ -37,4 +43,3 @@ export default function Command() {
     </List>
   );
 }
-
