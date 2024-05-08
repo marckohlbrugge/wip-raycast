@@ -104,7 +104,7 @@ interface StreakResponse {
 }
 
 export async function fetchStreak(): Promise<StreakResponse> {
-  const response = await fetch(`${apiUrl}/api/v1/users/me/streak.json`, {
+  const response = await fetch(`${apiUrl}/api/v1/users/me.json`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
@@ -115,10 +115,6 @@ export async function fetchStreak(): Promise<StreakResponse> {
     throw new Error(response.statusText);
   }
   return (await response.json()) as StreakResponse;
-}
-
-interface TodoResponse {
-  todos: Todo[];
 }
 
 export async function fetchTodos(): Promise<Todo[]> {
@@ -135,6 +131,5 @@ export async function fetchTodos(): Promise<Todo[]> {
     console.error("fetch items error:", await response.text());
     throw new Error(response.statusText);
   }
-  const json = (await response.json()) as TodoResponse;
-  return json.todos;
+  return (await response.json()) as Todo[];
 }

@@ -32,7 +32,7 @@ export default function Command() {
         <List.Item
           key={todo.id}
           title={todo.body}
-          icon={{ source: todo.completed_at ? Icon.CheckCircle : Icon.Circle, tintColor: todo.completed_at ? "green" : "gray" }}
+          icon={{ source: Icon.CheckCircle, tintColor: "green" }}
           actions={
             <ActionPanel>
               <Action.OpenInBrowser url={todo.url} />
