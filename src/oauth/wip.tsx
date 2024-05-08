@@ -117,9 +117,9 @@ export async function fetchStreak(): Promise<StreakResponse> {
   return (await response.json()) as StreakResponse;
 }
 
-export async function fetchTodos(): Promise<Todo[]> {
+export async function fetchTodos(searchQuery: string = ""): Promise<Todo[]> {
   const params = new URLSearchParams();
-  params.append("query", "raycast");
+  params.append("query", searchQuery);  // Use the search query parameter
 
   const response = await fetch(`${apiUrl}/api/v1/users/me/todos.json?` + params.toString(), {
     headers: {
@@ -132,4 +132,24 @@ export async function fetchTodos(): Promise<Todo[]> {
     throw new Error(response.statusText);
   }
   return (await response.json()) as Todo[];
+}
+
+export async function createTodo(todoText: string, file?: File): Promise<void> {
+  const formData = new FormData();
+  formData.append("body", todoText);
+  if (file) {
+    formData.append("file", file);
+  }
+
+  const response = await fetch(`${apiUrl}/api/v1/users/me/todos`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
+    },
+    body: formData
+  });
+  if (!response.ok) {
+    console.error("create todo error:", await response.text());
+    throw new Error(response.statusText);
+  }
 }
