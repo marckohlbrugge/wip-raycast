@@ -13,8 +13,8 @@
   "commands": [
     {
       "name": "index",
-      "title": "Show your WIP todos",
-      "description": "Template for showing a static list and a detail view",
+      "title": "Search your WIP todos",
+      "description": "Search your WIP todos",
       "mode": "view"
     },
     {
@@ -24,16 +24,24 @@
       "description": "Show WIP Streak",
       "mode": "no-view",
       "interval": "10s"
+    },
+    {
+      "name": "done",
+      "title": "Done",
+      "subtitle": "Add a completed todo",
+      "description": "Add a completed todo to your WIP account",
+      "mode": "view"
     }
   ],
   "dependencies": {
     "@raycast/api": "^1.66.2",
     "date-fns": "^3.6.0",
+    "lodash.debounce": "^4.0.8",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^1.0.6",
-    "@types/node": "20.8.10",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/react": "18.2.27",
     "eslint": "^8.51.0",
     "prettier": "^3.0.3",

@@ -2,7 +2,7 @@
 interface Todo {
   id: string;
   body: string;
-  completed_at: string | null;
+  completed_at: string;
   url: string;
 }
 

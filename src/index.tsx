@@ -3,31 +3,19 @@ import { useState, useEffect } from "react";
 import { Todo } from "./types";
 import * as wip from "./oauth/wip";
 import { getPreferenceValues, open, Clipboard } from "@raycast/api";
-import { formatDistanceStrict } from 'date-fns';
-
-function debounce(func, wait) {
-  console.log("Debouncing")
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-};
+import { formatDistanceStrict } from "date-fns";
+import debounce from "lodash.debounce";
 
 export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");  // State to hold the search query
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchAndSetTodos = async () => {
       try {
         await wip.authorize();
-        const fetchedTodos = await wip.fetchTodos(searchQuery);  // Pass the search query to fetchTodos
+        const fetchedTodos = await wip.fetchTodos(searchQuery);
         setTodos(fetchedTodos);
         setIsLoading(false);
       } catch (error) {
@@ -36,9 +24,26 @@ export default function Command() {
         showToast({ style: Toast.Style.Failure, title: String(error) });
       }
     };
-    const debouncedFetch = debounce(fetchAndSetTodos, 300);  // Debounce the API call
+    const debouncedFetch = debounce(fetchAndSetTodos, 300);
     debouncedFetch();
-  }, [searchQuery]);  // Depend on searchQuery to refetch when it changes
+  }, [searchQuery]);
+
+  async function createNewTodo(searchQuery: string) {
+    if (!searchQuery.trim()) {
+      showToast({ style: Toast.Style.Failure, title: "Cannot create an empty todo." });
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await wip.createTodo(searchQuery);
+      setSearchQuery("");
+      showToast({ style: Toast.Style.Success, title: "Todo created successfully!" });
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false);
+      showToast({ style: Toast.Style.Failure, title: String(error) });
+    }
+  }
 
   if (isLoading) {
     return <Detail isLoading={isLoading} />;
@@ -46,10 +51,10 @@ export default function Command() {
 
   return (
     <List isLoading={isLoading} searchBarPlaceholder="Search todos..." onSearchTextChange={setSearchQuery}>
-      {/*<List.Item
+      {/* <List.Item
         key="create-new"
-        title={`Create new Todo: "${searchQuery}"`}
-        icon={{ source: Icon.Plus, tintColor: "blue" }}
+        title={searchQuery ? `Add completed todo: ${searchQuery}` : "Add completed todo?"}
+        icon={{ source: Icon.PlusCircleFilled, tintColor: "green" }}
         actions={
           <ActionPanel>
             <Action
@@ -76,13 +81,12 @@ export default function Command() {
             />
           </ActionPanel>
         }
-      />*/}
+      /> */}
       {todos.map((todo) => (
         <List.Item
           key={todo.id}
           title={todo.body}
           subtitle={formatDistanceStrict(new Date(todo.completed_at), new Date(), { addSuffix: true })}
-          icon={{ source: Icon.CheckCircle, tintColor: "green" }}
           actions={
             <ActionPanel>
               <Action.OpenInBrowser url={todo.url} />
@@ -94,19 +98,3 @@ export default function Command() {
   );
 }
 
-async function createNewTodo(searchQuery: string) {
-  if (!searchQuery.trim()) {
-    showToast({ style: Toast.Style.Failure, title: "Cannot create an empty todo." });
-    return;
-  }
-  try {
-    setIsLoading(true);
-    await wip.createTodo(searchQuery);  // Assuming you have a function to create a todo
-    setSearchQuery("");  // Optionally clear the search query after creation
-    showToast({ style: Toast.Style.Success, title: "Todo created successfully!" });
-  } catch (error) {
-    console.error(error);
-    setIsLoading(false);
-    showToast({ style: Toast.Style.Failure, title: String(error) });
-  }
-}
