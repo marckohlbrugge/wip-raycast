@@ -8,7 +8,7 @@ Manage your [WIP](https://wip.co) todos from Raycast.
 git clone git@github.com:marckohlbrugge/wip-raycast.git
 cd wip-raycast
 npm install
-npm run develop
+npm run dev
 ```
 
 ## Development
@@ -18,7 +18,7 @@ npm run build
 ```
 
 ```sh
-npm run develop
+npm run dev
 ```
 
 ```sh
