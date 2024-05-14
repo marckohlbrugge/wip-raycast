@@ -81,7 +81,6 @@ export default function Command() {
     >
       <Form.TextArea
         id="todoInput"
-        title="Text"
         placeholder="What did you do?"
         autoFocus={true}
         value={searchQuery}
@@ -90,7 +89,7 @@ export default function Command() {
 
       <Form.FilePicker
         id="media"
-        title="Attachments"
+        title=""
         value={media}
         onChange={setMedia}
         allowMultipleSelection={true}
