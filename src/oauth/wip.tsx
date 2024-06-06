@@ -10,10 +10,21 @@ interface Preferences {
   clientId: string;
 }
 
-// const clientId = "nzJzX-pGkEIM2Zjbf-uVkdlCBOZA0dEQAKDtoZGjnLc"
-// const apiUrl = "http://localhost:3000"
-const clientId = "THXW84IpDZ58z9eYYCs3OcrG-vAwY6nUme1Ta4ckEHE"
-const apiUrl = "https://wip.co"
+const development = false;
+
+let clientId: string;
+let oauthUrl: string;
+let apiUrl: string;
+
+if (development) {
+  clientId = "nzJzX-pGkEIM2Zjbf-uVkdlCBOZA0dEQAKDtoZGjnLc"
+  oauthUrl = "http://wip.test:3000"
+  apiUrl = "http://api.wip.test:3000/v1"
+} else {
+  clientId = "THXW84IpDZ58z9eYYCs3OcrG-vAwY6nUme1Ta4ckEHE"
+  oauthUrl = "https://wip.co"
+  apiUrl = "https://api.wip.co/v1"
+}
 
 const client = new OAuth.PKCEClient({
   redirectMethod: OAuth.RedirectMethod.Web,
@@ -35,7 +46,7 @@ export async function authorize(): Promise<void> {
   }
 
   const authRequest = await client.authorizationRequest({
-    endpoint: `${apiUrl}/oauth/authorize`,
+    endpoint: `${oauthUrl}/oauth/authorize`,
     clientId: clientId,
     scope: "",
   });
@@ -54,7 +65,7 @@ export async function fetchTokens(
   params.append("grant_type", "authorization_code");
   params.append("redirect_uri", authRequest.redirectURI);
 
-  const response = await fetch(`${apiUrl}/oauth/token`, { method: "POST", body: params });
+  const response = await fetch(`${oauthUrl}/oauth/token`, { method: "POST", body: params });
   if (!response.ok) {
     console.error("fetch tokens error:", await response.text());
     throw new Error(response.statusText);
@@ -68,7 +79,7 @@ async function refreshTokens(refreshToken: string): Promise<OAuth.TokenResponse>
   params.append("refresh_token", refreshToken);
   params.append("grant_type", "refresh_token");
 
-  const response = await fetch(`${apiUrl}/oauth/token`, { method: "POST", body: params });
+  const response = await fetch(`${oauthUrl}/oauth/token`, { method: "POST", body: params });
   if (!response.ok) {
     console.error("refresh tokens error:", await response.text());
     throw new Error(response.statusText);
@@ -82,7 +93,7 @@ async function refreshTokens(refreshToken: string): Promise<OAuth.TokenResponse>
 // API
 
 export async function fetchUser(): Promise<{ id: string; username: string }[]> {
-  const response = await fetch(`${apiUrl}/api/v1/users/me.json`, {
+  const response = await fetch(`${apiUrl}/users/me.json`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
@@ -103,7 +114,7 @@ interface StreakResponse {
 }
 
 export async function fetchStreak(): Promise<StreakResponse> {
-  const response = await fetch(`${apiUrl}/api/v1/users/me.json`, {
+  const response = await fetch(`${apiUrl}/users/me.json`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
@@ -120,7 +131,7 @@ export async function fetchTodos(searchQuery: string = ""): Promise<Todo[]> {
   const params = new URLSearchParams();
   params.append("query", searchQuery);
 
-  const response = await fetch(`${apiUrl}/api/v1/users/me/todos.json?` + params.toString(), {
+  const response = await fetch(`${apiUrl}/users/me/todos.json?` + params.toString(), {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
@@ -130,7 +141,8 @@ export async function fetchTodos(searchQuery: string = ""): Promise<Todo[]> {
     console.error("fetch items error:", await response.text());
     throw new Error(response.statusText);
   }
-  return (await response.json()) as Todo[];
+  const jsonResponse = await response.json() as { data: Todo[] };
+  return jsonResponse.data;
 }
 
 export async function createTodo(todoText: string, filePaths: string[] = []): Promise<void> {
@@ -146,7 +158,7 @@ export async function createTodo(todoText: string, filePaths: string[] = []): Pr
     const fileName = path.basename(filePath);
     const fileSize = fileBuffer.length;
 
-    const { url, signed_id, method, headers } = await createPresignedUrl(fileName, fileSize, checksum, fileType);
+    const { url, signed_id, method, headers } = await createUpload(fileName, fileSize, checksum, fileType);
 
     console.log("Presigned URL", url);
     console.log("Signed ID", signed_id);
@@ -172,7 +184,7 @@ export async function createTodo(todoText: string, filePaths: string[] = []): Pr
   params.append("body", todoText);
   attachments.forEach(attachment => params.append("attachments[]", attachment));
 
-  const response = await fetch(`${apiUrl}/api/v1/todos`, {
+  const response = await fetch(`${apiUrl}/todos`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -187,23 +199,23 @@ export async function createTodo(todoText: string, filePaths: string[] = []): Pr
   }
 }
 
-export async function createPresignedUrl(filename: string, byteSize: number, checksum: string, contentType: string): Promise<{ url: string; signed_id: string; method: string; headers: Record<string, string> }> {
-  const response = await fetch(`${apiUrl}/api/v1/presigned_urls`, {
+export async function createUpload(filename: string, byteSize: number, checksum: string, contentType: string): Promise<{ url: string; signed_id: string; method: string; headers: Record<string, string> }> {
+  const response = await fetch(`${apiUrl}/uploads`, {
     method: 'POST',
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
     },
     body: JSON.stringify({
-      filename,
+      filename: filename,
       byte_size: byteSize,
-      checksum,
+      checksum: checksum,
       content_type: contentType,
     }),
   });
 
   if (!response.ok) {
-    console.error("createPresignedUrl error:", await response.text());
+    console.error("createUpload error:", await response.text());
     throw new Error(response.statusText);
   }
 

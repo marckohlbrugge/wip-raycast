@@ -86,7 +86,7 @@ export default function Command() {
         <List.Item
           key={todo.id}
           title={todo.body}
-          subtitle={formatDistanceStrict(new Date(todo.completed_at), new Date(), { addSuffix: true })}
+          subtitle={formatDistanceStrict(new Date(todo.created_at), new Date(), { addSuffix: true })}
           actions={
             <ActionPanel>
               <Action.OpenInBrowser url={todo.url} />
