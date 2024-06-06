@@ -1,14 +1,9 @@
 import { OAuth } from "@raycast/api";
 import fetch from "node-fetch";
 import { Todo } from "../types";
-import * as crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
-
-interface Preferences {
-  apiUrl: string;
-  clientId: string;
-}
+import * as crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 const development = false;
 
@@ -17,19 +12,19 @@ let oauthUrl: string;
 let apiUrl: string;
 
 if (development) {
-  clientId = "nzJzX-pGkEIM2Zjbf-uVkdlCBOZA0dEQAKDtoZGjnLc"
-  oauthUrl = "http://wip.test:3000"
-  apiUrl = "http://api.wip.test:3000/v1"
+  clientId = "nzJzX-pGkEIM2Zjbf-uVkdlCBOZA0dEQAKDtoZGjnLc";
+  oauthUrl = "http://wip.test:3000";
+  apiUrl = "http://api.wip.test:3000/v1";
 } else {
-  clientId = "THXW84IpDZ58z9eYYCs3OcrG-vAwY6nUme1Ta4ckEHE"
-  oauthUrl = "https://wip.co"
-  apiUrl = "https://api.wip.co/v1"
+  clientId = "THXW84IpDZ58z9eYYCs3OcrG-vAwY6nUme1Ta4ckEHE";
+  oauthUrl = "https://wip.co";
+  apiUrl = "https://api.wip.co/v1";
 }
 
 const client = new OAuth.PKCEClient({
   redirectMethod: OAuth.RedirectMethod.Web,
   providerName: "WIP",
-  providerIcon: "icon.svg",
+  providerIcon: "icon.png",
   providerId: "wip",
   description: "Connect your WIP account",
 });
@@ -56,7 +51,7 @@ export async function authorize(): Promise<void> {
 
 export async function fetchTokens(
   authRequest: OAuth.AuthorizationRequest,
-  authCode: string
+  authCode: string,
 ): Promise<OAuth.TokenResponse> {
   const params = new URLSearchParams();
   params.append("client_id", clientId);
@@ -100,10 +95,22 @@ export async function fetchUser(): Promise<{ id: string; username: string }[]> {
     },
   });
   if (!response.ok) {
-    console.error("fetch user error:", await response.text());
+    console.error("fetch user error:", await response.text(), "URL:", response.url);
     throw new Error(response.statusText);
   }
-  const json = (await response.json()) as { id: number; first_name: string; last_name: string; username: string; streak: number; best_streak: number; completed_todos_count: number; time_zone: string; streaking: boolean; url: string; avatar_url: string };
+  const json = (await response.json()) as {
+    id: number;
+    first_name: string;
+    last_name: string;
+    username: string;
+    streak: number;
+    best_streak: number;
+    completed_todos_count: number;
+    time_zone: string;
+    streaking: boolean;
+    url: string;
+    avatar_url: string;
+  };
   return { id: json.id.toString(), username: json.username };
 }
 
@@ -121,7 +128,7 @@ export async function fetchStreak(): Promise<StreakResponse> {
     },
   });
   if (!response.ok) {
-    console.error("fetch streak error:", await response.text());
+    console.error("fetch streak error:", await response.text(), "URL:", response.url);
     throw new Error(response.statusText);
   }
   return (await response.json()) as StreakResponse;
@@ -141,56 +148,58 @@ export async function fetchTodos(searchQuery: string = ""): Promise<Todo[]> {
     console.error("fetch items error:", await response.text());
     throw new Error(response.statusText);
   }
-  const jsonResponse = await response.json() as { data: Todo[] };
+  const jsonResponse = (await response.json()) as { data: Todo[] };
   return jsonResponse.data;
 }
 
 export async function createTodo(todoText: string, filePaths: string[] = []): Promise<void> {
   console.log("Received file paths:", filePaths); // Log received file paths
-  const attachments = await Promise.all(filePaths.map(async (filePath) => {
-    if (!fs.existsSync(filePath)) {
-      console.error("File does not exist:", filePath);
-      throw new Error("File does not exist");
-    }
-    const fileBuffer = fs.readFileSync(filePath);
-    const checksum = crypto.createHash("md5").update(fileBuffer).digest("base64");
-    const fileType = "application/octet-stream";
-    const fileName = path.basename(filePath);
-    const fileSize = fileBuffer.length;
+  const attachments = await Promise.all(
+    filePaths.map(async (filePath) => {
+      if (!fs.existsSync(filePath)) {
+        console.error("File does not exist:", filePath);
+        throw new Error("File does not exist");
+      }
+      const fileBuffer = fs.readFileSync(filePath);
+      const checksum = crypto.createHash("md5").update(fileBuffer).digest("base64");
+      const fileType = "application/octet-stream";
+      const fileName = path.basename(filePath);
+      const fileSize = fileBuffer.length;
 
-    const { url, signed_id, method, headers } = await createUpload(fileName, fileSize, checksum, fileType);
+      const { url, signed_id, method, headers } = await createUpload(fileName, fileSize, checksum, fileType);
 
-    console.log("Presigned URL", url);
-    console.log("Signed ID", signed_id);
-    console.log("Method", method);
-    console.log("Headers", headers);
+      console.log("Presigned URL", url);
+      console.log("Signed ID", signed_id);
+      console.log("Method", method);
+      console.log("Headers", headers);
 
-    const fileResponse = await fetch(url, {
-      method: method,
-      headers: headers,
-      body: fileBuffer,
-    });
-    console.log("File upload response:", await fileResponse.text()); // Log file upload response
+      const fileResponse = await fetch(url, {
+        method: method,
+        headers: headers,
+        body: fileBuffer,
+      });
+      console.log("File upload response:", await fileResponse.text()); // Log file upload response
 
-    if (!fileResponse.ok) {
-      console.error("File upload error:", await fileResponse.text());
-      throw new Error(fileResponse.statusText);
-    }
+      if (!fileResponse.ok) {
+        console.error("File upload error:", await fileResponse.text());
+        throw new Error(fileResponse.statusText);
+      }
 
-    return signed_id;
-  }));
+      return signed_id;
+    }),
+  );
 
   const params = new URLSearchParams();
   params.append("body", todoText);
-  attachments.forEach(attachment => params.append("attachments[]", attachment));
+  attachments.forEach((attachment) => params.append("attachments[]", attachment));
 
   const response = await fetch(`${apiUrl}/todos`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
     },
-    body: params
+    body: params,
   });
 
   if (!response.ok) {
@@ -199,9 +208,14 @@ export async function createTodo(todoText: string, filePaths: string[] = []): Pr
   }
 }
 
-export async function createUpload(filename: string, byteSize: number, checksum: string, contentType: string): Promise<{ url: string; signed_id: string; method: string; headers: Record<string, string> }> {
+export async function createUpload(
+  filename: string,
+  byteSize: number,
+  checksum: string,
+  contentType: string,
+): Promise<{ url: string; signed_id: string; method: string; headers: Record<string, string> }> {
   const response = await fetch(`${apiUrl}/uploads`, {
-    method: 'POST',
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,

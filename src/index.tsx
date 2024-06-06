@@ -1,8 +1,7 @@
-import { List, Detail, Toast, showToast, Icon, ActionPanel, Action } from "@raycast/api";
+import { List, Detail, Toast, showToast, ActionPanel, Action } from "@raycast/api";
 import { useState, useEffect } from "react";
 import { Todo } from "./types";
 import * as wip from "./oauth/wip";
-import { getPreferenceValues, open, Clipboard } from "@raycast/api";
 import { formatDistanceStrict } from "date-fns";
 import debounce from "lodash.debounce";
 
@@ -28,22 +27,22 @@ export default function Command() {
     debouncedFetch();
   }, [searchQuery]);
 
-  async function createNewTodo(searchQuery: string) {
-    if (!searchQuery.trim()) {
-      showToast({ style: Toast.Style.Failure, title: "Cannot create an empty todo." });
-      return;
-    }
-    try {
-      setIsLoading(true);
-      await wip.createTodo(searchQuery);
-      setSearchQuery("");
-      showToast({ style: Toast.Style.Success, title: "Todo created successfully!" });
-    } catch (error) {
-      console.error(error);
-      setIsLoading(false);
-      showToast({ style: Toast.Style.Failure, title: String(error) });
-    }
-  }
+  // async function createNewTodo(searchQuery: string) {
+  //   if (!searchQuery.trim()) {
+  //     showToast({ style: Toast.Style.Failure, title: "Cannot create an empty todo." });
+  //     return;
+  //   }
+  //   try {
+  //     setIsLoading(true);
+  //     await wip.createTodo(searchQuery);
+  //     setSearchQuery("");
+  //     showToast({ style: Toast.Style.Success, title: "Todo created successfully!" });
+  //   } catch (error) {
+  //     console.error(error);
+  //     setIsLoading(false);
+  //     showToast({ style: Toast.Style.Failure, title: String(error) });
+  //   }
+  // }
 
   if (isLoading) {
     return <Detail isLoading={isLoading} />;
@@ -97,4 +96,3 @@ export default function Command() {
     </List>
   );
 }
-

@@ -6,4 +6,3 @@ export default async function Command() {
   const user = await wip.fetchUser();
   showToast({ title: "Signed in as @" + user?.username || "unknown", style: Toast.Style.Success });
 }
-

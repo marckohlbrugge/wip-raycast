@@ -1,6 +1,7 @@
-import { Form, showToast, Toast, Icon, ActionPanel, Action, open, Clipboard } from "@raycast/api";
+import { Form, showToast, Toast, ActionPanel, Action, Clipboard } from "@raycast/api";
 import { useState, useEffect } from "react";
 import * as wip from "./oauth/wip";
+import fs from "fs";
 
 export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
@@ -27,17 +28,16 @@ export default function Command() {
       console.log("Clipboard file path:", clipboardContent.file);
 
       let filePath = decodeURIComponent(clipboardContent.file);
-      if (filePath.startsWith('file://')) {
-        filePath = filePath.replace('file://', '');
+      if (filePath.startsWith("file://")) {
+        filePath = filePath.replace("file://", "");
       }
 
-      const fs = require('fs');
       fs.access(filePath, fs.constants.F_OK, (err) => {
         if (err) {
           console.error("Error: File does not exist", filePath);
           showToast({ style: Toast.Style.Failure, title: "File does not exist", message: filePath });
         } else {
-          setMedia(prevMedia => [...prevMedia, filePath]);
+          setMedia((prevMedia) => [...prevMedia, filePath]);
           showToast({ style: Toast.Style.Success, title: "File added from clipboard!" });
         }
       });
@@ -75,7 +75,11 @@ export default function Command() {
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Save" onSubmit={createNewTodo} />
-          <Action title="Add File from Clipboard" onAction={addFileFromClipboard} shortcut={{ modifiers: ["cmd"], key: "v" }} />
+          <Action
+            title="Add File From Clipboard"
+            onAction={addFileFromClipboard}
+            shortcut={{ modifiers: ["cmd"], key: "v" }}
+          />
         </ActionPanel>
       }
     >
@@ -87,14 +91,7 @@ export default function Command() {
         onChange={setSearchQuery}
       />
 
-      <Form.FilePicker
-        id="media"
-        title=""
-        value={media}
-        onChange={setMedia}
-        allowMultipleSelection={true}
-      />
+      <Form.FilePicker id="media" title="" value={media} onChange={setMedia} allowMultipleSelection={true} />
     </Form>
   );
 }
-

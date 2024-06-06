@@ -3,7 +3,7 @@
   "name": "wip",
   "title": "WIP",
   "description": "List your WIP todos.",
-  "icon": "icon.svg",
+  "icon": "icon.png",
   "author": "marckohlbrugge",
   "categories": [
     "Productivity",
@@ -13,7 +13,7 @@
   "commands": [
     {
       "name": "index",
-      "title": "Search your WIP todos",
+      "title": "Search Your WIP Todos",
       "description": "Search your WIP todos",
       "mode": "view"
     },
