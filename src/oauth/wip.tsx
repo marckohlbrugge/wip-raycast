@@ -1,6 +1,6 @@
 import { OAuth } from "@raycast/api";
 import fetch from "node-fetch";
-import { Todo } from "../types";
+import { Todo, User } from "../types";
 import * as crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -87,7 +87,7 @@ async function refreshTokens(refreshToken: string): Promise<OAuth.TokenResponse>
 
 // API
 
-export async function fetchUser(): Promise<{ id: string; username: string }[]> {
+export async function fetchUser(): Promise<User> {
   const response = await fetch(`${apiUrl}/users/me.json`, {
     headers: {
       "Content-Type": "application/json",
@@ -98,20 +98,8 @@ export async function fetchUser(): Promise<{ id: string; username: string }[]> {
     console.error("fetch user error:", await response.text(), "URL:", response.url);
     throw new Error(response.statusText);
   }
-  const json = (await response.json()) as {
-    id: number;
-    first_name: string;
-    last_name: string;
-    username: string;
-    streak: number;
-    best_streak: number;
-    completed_todos_count: number;
-    time_zone: string;
-    streaking: boolean;
-    url: string;
-    avatar_url: string;
-  };
-  return { id: json.id.toString(), username: json.username };
+
+  return (await response.json()) as User;
 }
 
 interface StreakResponse {
