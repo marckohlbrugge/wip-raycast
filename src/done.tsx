@@ -76,7 +76,7 @@ export default function Command() {
         <ActionPanel>
           <Action.SubmitForm title="Save" onSubmit={createNewTodo} />
           <Action
-            title="Add File From Clipboard"
+            title="Add File from Clipboard"
             onAction={addFileFromClipboard}
             shortcut={{ modifiers: ["cmd"], key: "v" }}
           />

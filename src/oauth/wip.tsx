@@ -1,17 +1,18 @@
-import { OAuth } from "@raycast/api";
+import { OAuth, getPreferenceValues } from "@raycast/api";
 import fetch from "node-fetch";
-import { Todo, User } from "../types";
+import { Todo, User, Project } from "../types";
 import * as crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
-const development = false;
+const preferences = getPreferenceValues();
+const environment = preferences.environment;
 
 let clientId: string;
 let oauthUrl: string;
 let apiUrl: string;
 
-if (development) {
+if (environment === "development") {
   clientId = "nzJzX-pGkEIM2Zjbf-uVkdlCBOZA0dEQAKDtoZGjnLc";
   oauthUrl = "http://wip.test:3000";
   apiUrl = "http://api.wip.test:3000/v1";
@@ -76,6 +77,7 @@ async function refreshTokens(refreshToken: string): Promise<OAuth.TokenResponse>
 
   const response = await fetch(`${oauthUrl}/oauth/token`, { method: "POST", body: params });
   if (!response.ok) {
+    console.log("oauthUrl:", oauthUrl);
     console.error("refresh tokens error:", await response.text());
     throw new Error(response.statusText);
   }
@@ -137,6 +139,21 @@ export async function fetchTodos(searchQuery: string = ""): Promise<Todo[]> {
     throw new Error(response.statusText);
   }
   const jsonResponse = (await response.json()) as { data: Todo[] };
+  return jsonResponse.data;
+}
+
+export async function fetchProjects(): Promise<Project[]> {
+  const response = await fetch(`${apiUrl}/users/me/projects.json`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
+    },
+  });
+  if (!response.ok) {
+    console.error("fetch items error:", await response.text());
+    throw new Error(response.statusText);
+  }
+  const jsonResponse = (await response.json()) as { data: Project[] };
   return jsonResponse.data;
 }
 

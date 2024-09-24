@@ -1,4 +1,4 @@
-import { updateCommandMetadata } from "@raycast/api";
+import { updateCommandMetadata, showToast, Toast, environment } from "@raycast/api";
 import * as wip from "./oauth/wip";
 
 export default async function Command() {
@@ -8,4 +8,12 @@ export default async function Command() {
   await updateCommandMetadata({
     subtitle: `${data.streak} 🔥 – ${data.streaking ? "Your streak is safe" : "⚠️ No completed todos day!"}`,
   });
+
+  if (environment.launchType === "userInitiated") {
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Never lose your streak",
+      message: "Pin this command with ⇧⌘F",
+    });
+  }
 }

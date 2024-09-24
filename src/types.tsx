@@ -16,7 +16,18 @@ interface User {
   time_zone: string;
   streaking: boolean;
   url: string;
-  avatar_url: string;
-};
+}
 
-export type { Todo, User };
+interface Project {
+  id: number;
+  name: string;
+  pitch: string;
+  url: string;
+  logo: {
+    small: string;
+    medium: string;
+    large: string;
+  };
+}
+
+export type { Todo, User, Project };
