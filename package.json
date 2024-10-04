@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "wip",
   "title": "WIP",
-  "description": "List your WIP todos.",
+  "description": "Manage your WIP todos and projects from Raycast.",
   "icon": "icon.png",
   "author": "marckohlbrugge",
   "categories": [
