@@ -6,6 +6,6 @@
 - Add beta testing instructions
 - Fix original changelog date
 
-## [Initial Version] - 2024-09-24
+## [Initial Version] - 2024-10-03
 
 - Ship first public version
