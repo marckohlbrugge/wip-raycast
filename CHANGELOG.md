@@ -1,3 +1,11 @@
 # WIP Changelog
 
-## [Initial Version] - 2024-02-01
+## [Improved README] - {PR_MERGE_DATE}
+
+- List all features
+- Add beta testing instructions
+- Fix original changelog date
+
+## [Initial Version] - 2024-09-24
+
+- Ship first public version
