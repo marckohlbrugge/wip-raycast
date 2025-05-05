@@ -1,6 +1,10 @@
 # WIP Changelog
 
-## [Fixed bug with upload] – {PR_MERGE_DATE}
+## [Fixed typo] – 2025-05-05
+
+- Fix typo in subtitle
+
+## [Fixed bug with upload] – 2024-12-19
 
 - Set correct mime-type of copy/pasted files
 - Update Client ID for development
