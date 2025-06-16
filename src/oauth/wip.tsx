@@ -38,18 +38,41 @@ export async function authorize(): Promise<void> {
   const tokenSet = await client.getTokens();
   if (tokenSet?.accessToken) {
     if (tokenSet.refreshToken && tokenSet.isExpired()) {
-      await client.setTokens(await refreshTokens(tokenSet.refreshToken));
+      try {
+        await client.setTokens(await refreshTokens(tokenSet.refreshToken));
+      } catch (error) {
+        // Refresh failed, clear tokens and start fresh
+        console.log("Token refresh failed, clearing tokens:", error);
+        await client.setTokens({} as OAuth.TokenResponse);
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Session expired",
+          message: "Please run the command again to re-authenticate",
+        });
+        return;
+      }
     }
     return;
   }
 
-  const authRequest = await client.authorizationRequest({
-    endpoint: `${oauthUrl}/oauth/authorize`,
-    clientId: clientId,
-    scope: "",
-  });
-  const { authorizationCode } = await client.authorize(authRequest);
-  await client.setTokens(await fetchTokens(authRequest, authorizationCode));
+  try {
+    const authRequest = await client.authorizationRequest({
+      endpoint: `${oauthUrl}/oauth/authorize`,
+      clientId: clientId,
+      scope: "",
+    });
+    const { authorizationCode } = await client.authorize(authRequest);
+    await client.setTokens(await fetchTokens(authRequest, authorizationCode));
+  } catch (error) {
+    // OAuth flow failed, show helpful message
+    console.log("OAuth flow failed:", error);
+    await showToast({
+      style: Toast.Style.Failure,
+      title: "Authentication failed",
+      message: "Please try running the command again",
+    });
+    throw error; // Re-throw so command knows auth failed
+  }
 }
 
 export async function fetchTokens(
@@ -65,7 +88,20 @@ export async function fetchTokens(
 
   const response = await fetch(`${oauthUrl}/oauth/token`, { method: "POST", body: params });
   if (!response.ok) {
-    console.error("fetch tokens error:", await response.text());
+    const errorText = await response.text();
+    console.error("fetch tokens error:", errorText);
+
+    // Parse the error to provide better messaging
+    try {
+      const errorData = JSON.parse(errorText);
+      if (errorData.error === "invalid_grant") {
+        // This usually means the auth code expired or was already used
+        throw new Error("Authorization expired. Please try again.");
+      }
+    } catch (parseError) {
+      // Ignore parse errors, use original error
+    }
+
     throw new Error(response.statusText);
   }
   return (await response.json()) as OAuth.TokenResponse;
@@ -79,8 +115,20 @@ async function refreshTokens(refreshToken: string): Promise<OAuth.TokenResponse>
 
   const response = await fetch(`${oauthUrl}/oauth/token`, { method: "POST", body: params });
   if (!response.ok) {
+    const errorText = await response.text();
     console.log("oauthUrl:", oauthUrl);
-    console.error("refresh tokens error:", await response.text());
+    console.error("refresh tokens error:", errorText);
+
+    // Parse the error to provide better messaging
+    try {
+      const errorData = JSON.parse(errorText);
+      if (errorData.error === "invalid_grant") {
+        throw new Error("Refresh token expired. Please re-authenticate.");
+      }
+    } catch (parseError) {
+      // Ignore parse errors, use original error
+    }
+
     throw new Error(response.statusText);
   }
 
@@ -102,7 +150,7 @@ async function handleUnauthorized(): Promise<void> {
   await showToast({
     style: Toast.Style.Failure,
     title: "Authentication expired",
-    message: "Please run the command again to re-authenticate"
+    message: "Please run the command again to re-authenticate",
   });
 }
 
