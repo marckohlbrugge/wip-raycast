@@ -1,6 +1,6 @@
 # WIP Changelog
 
-## [Fixed typo] – 2025-05-05
+## [Fixed typo] - 2025-05-05
 
 - Fix typo in subtitle
 
