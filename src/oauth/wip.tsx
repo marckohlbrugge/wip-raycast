@@ -1,4 +1,4 @@
-import { OAuth, getPreferenceValues } from "@raycast/api";
+import { OAuth, getPreferenceValues, showToast, Toast } from "@raycast/api";
 import fetch from "node-fetch";
 import { Todo, User, Project } from "../types";
 import * as crypto from "crypto";
@@ -89,7 +89,22 @@ async function refreshTokens(refreshToken: string): Promise<OAuth.TokenResponse>
   return tokenResponse;
 }
 
-// API
+// Simple helper to handle auth errors
+async function handleUnauthorized(): Promise<void> {
+  console.log("Authentication failed, clearing tokens");
+
+  try {
+    await client.setTokens({} as OAuth.TokenResponse);
+  } catch (error) {
+    console.log("Failed to clear tokens:", error);
+  }
+
+  await showToast({
+    style: Toast.Style.Failure,
+    title: "Authentication expired",
+    message: "Please run the command again to re-authenticate"
+  });
+}
 
 export async function fetchUser(): Promise<User> {
   const response = await fetch(`${apiUrl}/users/me.json`, {
@@ -98,6 +113,11 @@ export async function fetchUser(): Promise<User> {
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
     },
   });
+
+  if (response.status === 401) {
+    await handleUnauthorized();
+  }
+
   if (!response.ok) {
     console.error("fetch user error:", await response.text(), "URL:", response.url);
     throw new Error(response.statusText);
@@ -119,10 +139,16 @@ export async function fetchStreak(): Promise<StreakResponse> {
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
     },
   });
+
+  if (response.status === 401) {
+    await handleUnauthorized();
+  }
+
   if (!response.ok) {
     console.error("fetch streak error:", await response.text(), "URL:", response.url);
     throw new Error(response.statusText);
   }
+
   return (await response.json()) as StreakResponse;
 }
 
@@ -136,10 +162,16 @@ export async function fetchTodos(searchQuery: string = ""): Promise<Todo[]> {
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
     },
   });
+
+  if (response.status === 401) {
+    await handleUnauthorized();
+  }
+
   if (!response.ok) {
     console.error("fetch items error:", await response.text());
     throw new Error(response.statusText);
   }
+
   const jsonResponse = (await response.json()) as { data: Todo[] };
   return jsonResponse.data;
 }
@@ -151,10 +183,16 @@ export async function fetchProjects(): Promise<Project[]> {
       Authorization: `Bearer ${(await client.getTokens())?.accessToken}`,
     },
   });
+
+  if (response.status === 401) {
+    await handleUnauthorized();
+  }
+
   if (!response.ok) {
     console.error("fetch items error:", await response.text());
     throw new Error(response.statusText);
   }
+
   const jsonResponse = (await response.json()) as { data: Project[] };
   return jsonResponse.data;
 }
