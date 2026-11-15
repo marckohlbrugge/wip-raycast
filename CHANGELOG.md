@@ -4,7 +4,15 @@
 
 - Attach screenshots and other copied images when pasting into Add Completed Todo
 
-## [Improved authentication error handling] - {PR_MERGE_DATE}
+## [Fix todo search debounce] - 2026-10-12
+
+- Cancel pending debounced todo searches when the search query changes
+
+## [Fix] - 2026-08-21
+
+- Reduced background streak refreshes to once per minute.
+
+## [Improved authentication error handling] - 2025-06-16
 
 - Improve authentication error handling
 
