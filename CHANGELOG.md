@@ -1,5 +1,9 @@
 # WIP Changelog
 
+## [Paste images from clipboard] - {PR_MERGE_DATE}
+
+- Attach screenshots and other copied images when pasting into Add Completed Todo
+
 ## [Improved authentication error handling] - {PR_MERGE_DATE}
 
 - Improve authentication error handling
